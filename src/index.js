@@ -11,29 +11,70 @@ import 'simplelightbox/dist/simple-lightbox.min.css';
 
 const BASE_URL = 'pixabay.com/api/';
 const API_KEY = '31672084-87e680c1be7fd52a9d7861da9';
-const params = 'image_type=photo&orientation=horizontal&safesearch =true';
+const params = 'image_type=photo&orientation=horizontal&safesearch=true';
+const PER_PAGE = '40';
+let page = 1;
 
 const galleryList = document.querySelector('.gallery');
+const searchForm = document.querySelector('#search-form');
+// const loadMoreBtn = document.querySelector('.load-more')
+const guard = document.querySelector('.guard-js');
+let options = {
+  root: null,
+  rootMargin: '300px',
+  threshold: 1.0,
+};
+let observer = new IntersectionObserver(infiniteScroll, options);
 
-async function getGallery(q = 'dog') {
+searchForm.addEventListener('submit', onSearchImages);
+// loadMoreBtn.addEventListener('click', onLoadMore)
+
+async function fetchGalleryImages(q) {
   try {
     const response = await axios.get(
-      `https://${BASE_URL}?key=${API_KEY}&${params}&q=${q}`
+      `https://${BASE_URL}?key=${API_KEY}&${params}&per_page=${PER_PAGE}&page=${page}&q=${q}`
     );
     return response;
-  } catch (e) {
-    console.error(e);
+  } catch (err) {
+    console.error(err);
   }
 }
 
-getGallery().then(resp => {
-  console.log('resp', resp);
-  createGallery(resp.data);
-  console.log(resp.data);
-})
+function onSearchImages(evt) {
+  evt.preventDefault();
 
-function createGallery(arr) {
-  console.log(arr);
+  cleanerMarkup();
+
+  const searchValue = evt.target.searchQuery.value.toLowerCase();
+  // console.log(searchValue);
+
+  if (!searchValue) {
+    noTopic();
+    return;
+  }
+
+  fetchGalleryImages(searchValue).then(resp => {
+    if (!resp.data.hits.length) {
+      // console.log('resp', resp);
+      notFoundImages();
+      return;
+    }
+    totalImagesSuccess(resp.data.totalHits);
+    createGalleryImages(resp.data.hits);
+
+    observer.observe(guard);
+    // loadMoreBtn.removeAttribute("hidden");
+  });
+}
+
+// function onLoadMore() {
+//   page += 1;
+//   fetchGalleryImages(q, page).then(resp => {
+//     createGalleryImages(resp.data.hits);
+//   });
+// }
+
+function createGalleryImages(arr) {
   const markup = arr
     .map(
       ({ webformatURL, tags, likes, views, comments, downloads }) =>
@@ -57,4 +98,47 @@ function createGallery(arr) {
     )
     .join('');
   galleryList.insertAdjacentHTML('beforeend', markup);
+}
+
+function cleanerMarkup() {
+  galleryList.innerHTML = '';
+}
+
+function notFoundImages() {
+  Notify.failure(
+    'Sorry, there are no images matching your search query. Please try again.'
+  );
+}
+
+function totalImagesSuccess(amount) {
+  Notify.success(`Hooray! We found ${amount} images.`);
+}
+
+function noTopic() {
+  Notify.warning('Please, enter the search term');
+}
+
+function endOfHits() {
+  Notify.info(`We're sorry, but you've reached the end of search results.`);
+}
+
+function infiniteScroll(entries, observer) {
+  console.log(entries);
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      page += 1;
+      fetchGalleryImages(page).then(resp => {
+        createGalleryImages(resp.data.hits);
+        const pages = countPages(Number(resp.data.totalHits), Number(PER_PAGE));
+        if (pages === page) {
+          endOfHits();
+          observer.unobserve(guard);
+        }
+      });
+    }
+  });
+}
+
+function countPages(totalHits, perPege) {
+  return Math.ceil(totalHits / perPege);
 }
