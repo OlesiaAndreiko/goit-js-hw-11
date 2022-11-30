@@ -104,28 +104,24 @@ function createGalleryImages(arr) {
         comments,
         downloads,
       }) =>
-        `<div class="photo-card">
-        <div>
-    <a class="gallery__item" href="${largeImageURL}">        
-  <img class="gallery__image" src="${webformatURL}" alt="${tags}" loading="lazy" />
-  </div>
+        `<div class="photo-card">        
+  <a class="gallery__item" href="${largeImageURL}">        
+  <img class="gallery__image" src="${webformatURL}" alt="${tags}" loading="lazy" /></a>
   <div class="info">
     <p class="info-item">
-      <b>Likes<span>${likes}</span></b>
+      <b>Likes</b><span>${likes}</span>
     </p>
     <p class="info-item">
-      <b>Views<span>${views}</span></b>
+      <b>Views</b><span>${views}</span>
     </p>
     <p class="info-item">
-      <b>Comments<span>${comments}</span></b>
+      <b>Comments</b><span>${comments}</span>
     </p>
     <p class="info-item">
-      <b>Downloads<span>${downloads}</span></b>
+      <b>Downloads</b><span>${downloads}</span>
     </p>
-  </div>
-  </a>
-</div>
-`
+  </div> 
+</div>`
     )
     .join('');
   galleryList.insertAdjacentHTML('beforeend', markup);
