@@ -1,60 +1,48 @@
-import axios from 'axios';
-import { Notify } from 'notiflix/build/notiflix-notify-aio';
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
+import fetchGalleryImages from './components/fetchImages';
+import * as myNotify from './components/notifyInforming';
 
-const BASE_URL = 'pixabay.com/api/';
-const API_KEY = '31672084-87e680c1be7fd52a9d7861da9';
-const params = 'image_type=photo&orientation=horizontal&safesearch=true';
 const PER_PAGE = '40';
 let searchValue = '';
 let page = 1;
 
 const galleryList = document.querySelector('.gallery');
-
 const searchForm = document.querySelector('#search-form');
 const guard = document.querySelector('.guard-js');
 let options = {
   root: null,
-  rootMargin: '300px',
+  rootMargin: '500px',
   threshold: 1.0,
 };
+
 let observer = new IntersectionObserver(infiniteScroll, options);
-const simpleligthbox = new SimpleLightbox('.gallery a', { captionDelay: 250 });
+const simpleligthbox = new SimpleLightbox('.gallery a', { captionDelay: 300 });
 
 searchForm.addEventListener('submit', onSearchImages);
 
-async function fetchGalleryImages(q, page = 1) {
-  try {
-    const response = await axios.get(
-      `https://${BASE_URL}?key=${API_KEY}&${params}&per_page=${PER_PAGE}&page=${page}&q=${q}`
-    );
-    return response;
-  } catch (err) {
-    console.error(err);
-  }
-}
 
 function onSearchImages(evt) {
   evt.preventDefault();
 
   cleanerMarkup();
 
-  searchValue = evt.target.searchQuery.value.toLowerCase();
-  // console.log(searchValue);
-
-  if (!searchValue) {
-    noTopic();
-    return;
-  }
+  searchValue = evt.target.searchQuery.value;
 
   fetchGalleryImages(searchValue, page).then(resp => {
-    if (!resp.data.hits.length) {
-      // console.log('resp', resp);
-      notFoundImages();
+    // console.log('resp', resp);
+
+    if (!searchValue.length) {
+      myNotify.noTopic(); 
       return;
-    }
-    totalImagesSuccess(resp.data.totalHits);
+    } 
+
+    if (!resp.data.hits.length) {
+      myNotify.notFoundImages();
+      return;
+    } 
+    
+    myNotify.totalImagesSuccess(resp.data.totalHits);
     createGalleryImages(resp.data.hits);
 
     observer.observe(guard);
@@ -66,27 +54,19 @@ function infiniteScroll(entries, observer) {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
       page += 1;
+      console.log(page);
+
       fetchGalleryImages(searchValue, page).then(resp => {
         createGalleryImages(resp.data.hits);
-
-        ////////// плавне прокручування сторінки???
-
-        const { height: cardHeight } = document
-          .querySelector('.gallery')
-          .firstElementChild.getBoundingClientRect();
-
-        window.scrollBy({
-          top: cardHeight * 2,
-          behavior: 'smooth',
-        });
-        /////////// плавне прокручування сторінки???
 
         const pages = countPages(Number(resp.data.totalHits), Number(PER_PAGE));
 
         if (pages === page) {
           observer.unobserve(guard);
-          endOfHits();
+          myNotify.endOfHits();
         }
+
+        smoothScroll();
       });
     }
   });
@@ -130,30 +110,26 @@ function createGalleryImages(arr) {
   simpleligthbox.refresh();
 }
 
+// плавне прокручування сторінки
+function smoothScroll() {
+  const { height: cardHeight } = document
+    .querySelector('.gallery')
+    .firstElementChild.getBoundingClientRect();
+
+  console.log('hello');
+
+  window.scrollBy({
+    top: cardHeight * 2,
+    behavior: 'smooth',
+  });
+
+  console.log('Trololo');
+}
+
 function cleanerMarkup() {
   galleryList.innerHTML = '';
 }
 
 function countPages(totalHits, perPege) {
   return Math.ceil(totalHits / perPege);
-}
-
-// Для повідомлень використана бібліотека notiflix.
-
-function notFoundImages() {
-  Notify.failure(
-    'Sorry, there are no images matching your search query. Please try again.'
-  );
-}
-
-function totalImagesSuccess(amount) {
-  Notify.success(`Hooray! We found ${amount} images.`);
-}
-
-function noTopic() {
-  Notify.warning('Please, enter the search term');
-}
-
-function endOfHits() {
-  Notify.info(`We're sorry, but you've reached the end of search results.`);
 }

@@ -75,7 +75,7 @@ button:hover {
 .gallery {
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-between;
+  justify-content: space-evenly;
   gap: 15px;
   flex-basis: calc((100% - (3 * 15px) / 4));
 
@@ -102,7 +102,7 @@ button:hover {
 }
 
 .photo-card:hover {
-  transform: scale(1.03);
+  transform: scale(1.02);
 }
 
 .gallery__item {
