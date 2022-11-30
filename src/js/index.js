@@ -21,7 +21,6 @@ const simpleligthbox = new SimpleLightbox('.gallery a', { captionDelay: 300 });
 
 searchForm.addEventListener('submit', onSearchImages);
 
-
 function onSearchImages(evt) {
   evt.preventDefault();
 
@@ -33,15 +32,16 @@ function onSearchImages(evt) {
     // console.log('resp', resp);
 
     if (!searchValue.length) {
-      myNotify.noTopic(); 
+      myNotify.noTopic();
+      cleanerMarkup();
       return;
-    } 
+    }
 
     if (!resp.data.hits.length) {
       myNotify.notFoundImages();
       return;
-    } 
-    
+    }
+
     myNotify.totalImagesSuccess(resp.data.totalHits);
     createGalleryImages(resp.data.hits);
 
