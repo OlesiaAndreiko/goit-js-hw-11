@@ -45,16 +45,17 @@ function onSearchImages(evt) {
     myNotify.totalImagesSuccess(resp.data.totalHits);
     createGalleryImages(resp.data.hits);
 
-    observer.observe(guard);
+    if (resp.data.totalHits > PER_PAGE) {
+      observer.observe(guard);
+    }
   });
 }
 
 function infiniteScroll(entries, observer) {
-  // console.log(entries);
+  // console.log(entries)
   entries.forEach(entry => {
     if (entry.isIntersecting) {
       page += 1;
-      // console.log(page);
 
       fetchGalleryImages(searchValue, page).then(resp => {
         createGalleryImages(resp.data.hits);
@@ -116,17 +117,15 @@ function smoothScroll() {
     .querySelector('.gallery')
     .firstElementChild.getBoundingClientRect();
 
-  // console.log('hello');
-
   window.scrollBy({
     top: cardHeight * 2,
     behavior: 'smooth',
   });
-
-  // console.log('Trololo');
 }
 
 function cleanerMarkup() {
+  observer.unobserve(guard);
+  page = 1;
   galleryList.innerHTML = '';
 }
 
