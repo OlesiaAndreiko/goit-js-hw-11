@@ -54,7 +54,7 @@ function infiniteScroll(entries, observer) {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
       page += 1;
-      console.log(page);
+      // console.log(page);
 
       fetchGalleryImages(searchValue, page).then(resp => {
         createGalleryImages(resp.data.hits);
@@ -116,14 +116,14 @@ function smoothScroll() {
     .querySelector('.gallery')
     .firstElementChild.getBoundingClientRect();
 
-  console.log('hello');
+  // console.log('hello');
 
   window.scrollBy({
     top: cardHeight * 2,
     behavior: 'smooth',
   });
 
-  console.log('Trololo');
+  // console.log('Trololo');
 }
 
 function cleanerMarkup() {
